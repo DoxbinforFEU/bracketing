@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tournament Bracketing Assignment</title>
+<style>
+  :root{
+    --bg:#f6f7f5; --card:#ffffff; --ink:#1f2421; --sub:#5b625d; --line:#d7dbd4;
+    --accent:#0f6e56; --accent-light:#e1f5ee; --accent-dark:#04342c;
+    --accent2:#185fa5; --accent2-light:#e6f1fb;
+    --gold:#854f0b; --gold-light:#faeeda;
+    --coral:#993c1d; --coral-light:#faece7;
+    --purple:#3c3489; --purple-light:#eeedfe;
+    --pink:#993556; --pink-light:#fbeaf0;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;}
+  header.hero{background:var(--accent-dark);color:#fff;padding:40px 24px 30px;text-align:center;}
+  header.hero h1{margin:0 0 8px;font-size:28px;font-weight:700;}
+  header.hero p{margin:0;color:#9fe1cb;font-size:15px;}
+  nav.tabs{position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:4px;padding:10px 16px;justify-content:center;}
+  nav.tabs a{font-size:13px;padding:8px 12px;border-radius:20px;text-decoration:none;color:var(--sub);background:var(--bg);border:1px solid var(--line);white-space:nowrap;}
+  nav.tabs a:hover{background:var(--accent-light);color:var(--accent-dark);border-color:var(--accent);}
+  main{max-width:1080px;margin:0 auto;padding:24px 16px 80px;}
+  section{margin-bottom:56px;scroll-margin-top:64px;}
+  section h2{font-size:22px;margin:0 0 4px;color:var(--accent-dark);}
+  section .meta{color:var(--sub);font-size:13px;margin-bottom:18px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:16px;}
+  table.calc{width:100%;border-collapse:collapse;font-size:14px;}
+  table.calc th, table.calc td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top;}
+  table.calc th{background:var(--accent-light);color:var(--accent-dark);width:26%;}
+  table.calc .ans{font-weight:700;color:var(--accent);}
+  .badge{display:inline-block;background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-left:8px;vertical-align:middle;}
+  .bracket-scroll{overflow-x:auto;padding:10px 4px 20px;}
+  .match-box{fill:var(--card);stroke:var(--line);stroke-width:1;}
+  .match-text{font-size:12px;fill:var(--ink);font-family:inherit;}
+  .match-text.bye{fill:#0f6e56;font-weight:700;}
+  .conn{stroke:var(--line);stroke-width:1.5;fill:none;}
+  .round-label{font-size:12px;font-weight:700;fill:var(--sub);}
+  .lb-flow{display:flex;gap:18px;overflow-x:auto;padding:6px 4px 18px;}
+  .lb-round{min-width:190px;flex:0 0 auto;}
+  .lb-round h4{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--sub);margin:0 0 10px;text-align:center;}
+  .lb-match{background:var(--coral-light);border:1px solid #d85a30;border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:26px;position:relative;color:var(--coral);}
+  .lb-match.bye{background:var(--accent-light);border-color:var(--accent);color:var(--accent-dark);}
+  .lb-match:after{content:"";position:absolute;right:-18px;top:50%;width:18px;border-top:1.5px dashed var(--line);}
+  .lb-round:last-child .lb-match:after{display:none;}
+  .gf-box{max-width:340px;margin:10px auto 0;background:var(--purple-light);border:2px solid var(--purple);border-radius:12px;padding:16px 18px;text-align:center;color:var(--purple);font-weight:700;font-size:14px;}
+  .gf-note{font-size:12px;font-weight:400;color:var(--sub);margin-top:6px;}
+  table.sched{border-collapse:collapse;width:100%;font-size:13px;}
+  table.sched th, table.sched td{border:1px solid var(--line);padding:7px 9px;text-align:center;}
+  table.sched th{background:var(--accent2-light);color:#042c53;}
+  table.sched td.rlabel{background:var(--bg);font-weight:700;color:var(--sub);}
+  .rr-wrap{overflow-x:auto;}
+  .step-ladder{display:flex;flex-direction:column;align-items:center;gap:0;max-width:420px;margin:10px auto 0;}
+  .step-row{display:flex;align-items:center;gap:14px;width:100%;}
+  .step-box{flex:1;background:var(--gold-light);border:1px solid var(--gold);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--gold);}
+  .step-box.final{background:var(--purple-light);border-color:var(--purple);color:var(--purple);font-weight:700;}
+  .step-arrow{color:var(--sub);font-size:18px;}
+  .step-connector{height:20px;width:2px;background:var(--line);margin-left:24px;}
+  footer{text-align:center;color:var(--sub);font-size:12px;padding:30px 16px;}
+  .print-btn{position:fixed;bottom:20px;right:20px;background:var(--accent);color:#fff;border:none;padding:12px 18px;border-radius:24px;font-size:13px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.15);}
+  @media print{
+    nav.tabs, .print-btn{display:none;}
+    section{page-break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <h1>Tournament Bracketing — Assignment</h1>
+  <p>Single &amp; double elimination · round robin · stepladder — computations and bracket diagrams</p>
+</header>
+
+<nav class="tabs">
+  <a href="#part1">Part 1: Computations</a>
+  <a href="#se16">Single Elim (16)</a>
+  <a href="#se10">Single Elim (10)</a>
+  <a href="#de16">Double Elim (16)</a>
+  <a href="#de10">Double Elim (10)</a>
+  <a href="#srr10">Round Robin (10)</a>
+  <a href="#drr10">Double RR (10)</a>
+  <a href="#step6">Stepladder (6)</a>
+</nav>
+
+<main>
+
+  <section id="part1">
+    <h2>Part 1 — Computations <span class="badge">15 points</span></h2>
+    <p class="meta">Formulas used and computed values for each tournament format.</p>
+    <div class="card">
+      <table class="calc">
+        <tr><th>1. Single elimination, N = 16</th>
+          <td>
+            Total games = N − 1 = 16 − 1 = <span class="ans">15 games</span><br>
+            Rounds = ⌈log₂N⌉ = ⌈log₂16⌉ = <span class="ans">4 rounds</span>
+          </td></tr>
+        <tr><th>2. Single elimination byes, N = 10</th>
+          <td>
+            Bracket size = next power of 2 ≥ N = 16<br>
+            Byes = Bracket size − N = 16 − 10 = <span class="ans">6 byes</span>
+          </td></tr>
+        <tr><th>3. Double elimination, N = 16</th>
+          <td>
+            Minimum games = 2N − 2 = 2(16) − 2 = <span class="ans">30 games</span><br>
+            Maximum (with bracket reset) = 2N − 1 = <span class="ans">31 games</span>
+          </td></tr>
+        <tr><th>4. Double elimination, N = 10</th>
+          <td>
+            Minimum games = 2N − 2 = 2(10) − 2 = <span class="ans">18 games</span><br>
+            Maximum (with bracket reset) = 2N − 1 = <span class="ans">19 games</span>
+          </td></tr>
+        <tr><th>5. Single round robin, N = 10</th>
+          <td>
+            Games = N(N − 1) / 2 = 10(9) / 2 = <span class="ans">45 games</span><br>
+            Rounds = N − 1 = <span class="ans">9 rounds</span> (5 matches per round)
+          </td></tr>
+        <tr><th>6. Double round robin, N = 10</th>
+          <td>
+            Games = N(N − 1) = 10(9) = <span class="ans">90 games</span><br>
+            Rounds = 2(N − 1) = <span class="ans">18 rounds</span>
+          </td></tr>
+        <tr><th>7. Stepladder, N = 6</th>
+          <td>
+            Games = N − 1 = 6 − 1 = <span class="ans">5 games</span>
+          </td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section id="se16">
+    <h2>Single Elimination — 16 Teams <span class="badge">5 pts</span></h2>
+    <p class="meta">15 games total across 4 rounds. No byes needed (16 is already a power of 2).</p>
+    <div class="card"><div class="bracket-scroll"><svg id="svg-se16"></svg></div></div>
+  </section>
+
+  <section id="se10">
+    <h2>Single Elimination — 10 Teams <span class="badge">5 pts</span></h2>
+    <p class="meta">9 games total. Bracket padded to 16 slots with 6 byes in round 1 (green boxes advance automatically), producing a clean bracket from round 2 onward.</p>
+    <div class="card"><div class="bracket-scroll"><svg id="svg-se10"></svg></div></div>
+  </section>
+
+  <section id="de16">
+    <h2>Double Elimination — 16 Teams <span class="badge">5 pts</span></h2>
+    <p class="meta">Winners bracket (top) feeds losers into the losers bracket (below). Total: 30 games minimum, 31 if the losers'-bracket champion forces a bracket reset in the grand final.</p>
+    <div class="card">
+      <h3 style="margin-top:0;font-size:14px;color:var(--sub);">Winners bracket</h3>
+      <div class="bracket-scroll"><svg id="svg-de16-wb"></svg></div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;font-size:14px;color:var(--sub);">Losers bracket</h3>
+      <div class="lb-flow" id="lb-de16"></div>
+    </div>
+    <div class="gf-box">Grand Final: Winners bracket champion vs. Losers bracket champion
+      <div class="gf-note">If the losers'-bracket champion wins, a reset match is played (game 31) since both finalists would then have 1 loss.</div>
+    </div>
+  </section>
+
+  <section id="de10">
+    <h2>Double Elimination — 10 Teams <span class="badge">5 pts</span></h2>
+    <p class="meta">Winners bracket uses the same 6-bye structure as the single-elimination 10-team bracket above. Total: 18 games minimum, 19 with a bracket reset.</p>
+    <div class="card">
+      <h3 style="margin-top:0;font-size:14px;color:var(--sub);">Winners bracket</h3>
+      <div class="bracket-scroll"><svg id="svg-de10-wb"></svg></div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;font-size:14px;color:var(--sub);">Losers bracket</h3>
+      <p class="meta" style="margin-top:-4px;">Because 6 teams received first-round byes, only 2 losers exist after winners-bracket round 1 — so the losers bracket starts small and gains an extra "bye" entrant in round 2 before merging with later winners-bracket dropouts.</p>
+      <div class="lb-flow" id="lb-de10"></div>
+    </div>
+    <div class="gf-box">Grand Final: Winners bracket champion vs. Losers bracket champion
+      <div class="gf-note">If the losers'-bracket champion wins, a reset match is played (game 19).</div>
+    </div>
+  </section>
+
+  <section id="srr10">
+    <h2>Single Round Robin — 10 Teams <span class="badge">5 pts</span></h2>
+    <p class="meta">45 total games across 9 rounds (5 matches per round), generated with the standard circle method — one team fixed, the rest rotate each round.</p>
+    <div class="card rr-wrap"><table class="sched" id="tbl-srr10"></table></div>
+  </section>
+
+  <section id="drr10">
+    <h2>Double Round Robin — 10 Teams <span class="badge">5 pts</span></h2>
+    <p class="meta">90 total games across 18 rounds — the single round robin schedule above, played twice, with home/away reversed on the second leg.</p>
+    <div class="card rr-wrap"><table class="sched" id="tbl-drr10"></table></div>
+  </section>
+
+  <section id="step6">
+    <h2>Stepladder — 6 Teams <span class="badge">5 pts</span></h2>
+    <p class="meta">5 games total. The two lowest seeds play first; the winner climbs the ladder to face the next-highest seed, and so on, until the top seed enters at the championship game.</p>
+    <div class="card"><div class="step-ladder" id="step6-ladder"></div></div>
+  </section>
+
+</main>
+
+<footer>Tournament Bracketing Assignment — generated bracket diagrams and schedules</footer>
+<button class="print-btn" onclick="window.print()">Print / Save as PDF</button>
+
+<script>
+/* ---------- shared helpers ---------- */
+const SVGNS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, parent){
+  const e = document.createElementNS(SVGNS, tag);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  if(parent) parent.appendChild(e);
+  return e;
+}
+
+/* Build a clean single-elimination round structure with byes handled in round 1 */
+function buildSingleElim(n){
+  const bracketSize = Math.pow(2, Math.ceil(Math.log2(n)));
+  const byes = bracketSize - n;
+  const realMatches = (n - byes) / 2;
+  let gid = 1;
+  let round1 = [];
+  let teamIdx = 1;
+  for(let i=0;i<realMatches;i++){
+    round1.push({id:gid++, a:'Team '+teamIdx, b:'Team '+(teamIdx+1), bye:false});
+    teamIdx += 2;
+  }
+  for(let i=0;i<byes;i++){
+    round1.push({id:gid++, a:'Team '+teamIdx, b:'BYE', bye:true});
+    teamIdx += 1;
+  }
+  const rounds = [round1];
+  let current = round1;
+  let count = bracketSize/2;
+  while(count > 1){
+    count /= 2;
+    const next = [];
+    for(let i=0;i<count;i++){
+      const f1 = current[2*i], f2 = current[2*i+1];
+      const w1 = f1.bye ? (f1.a==='BYE'?f1.b:f1.a) : ('Winner M'+f1.id);
+      const w2 = f2.bye ? (f2.a==='BYE'?f2.b:f2.a) : ('Winner M'+f2.id);
+      next.push({id:gid++, a:w1, b:w2, bye:false});
+    }
+    rounds.push(next);
+    current = next;
+  }
+  return rounds;
+}
+
+/* Render a tree-style elimination bracket into an <svg> given rounds data */
+function renderTreeBracket(svgId, rounds){
+  const svg = document.getElementById(svgId);
+  const boxW = 148, boxH = 46, roundGap = 60, vGap = 22;
+  const numRounds = rounds.length;
+  const maxMatches = rounds[0].length;
+  const totalH = maxMatches * (boxH + vGap) + 50;
+  const totalW = numRounds * (boxW + roundGap) + 40;
+  svg.setAttribute('width', totalW);
+  svg.setAttribute('height', totalH);
+  svg.setAttribute('viewBox', '0 0 '+totalW+' '+totalH);
+
+  let positions = [];
+  rounds.forEach((round, rIdx)=>{
+    const x = 20 + rIdx * (boxW + roundGap);
+    const pos = [];
+    round.forEach((m, mIdx)=>{
+      let y;
+      if(rIdx === 0){
+        y = 40 + mIdx * (boxH + vGap);
+      } else {
+        const prevA = positions[rIdx-1][2*mIdx];
+        const prevB = positions[rIdx-1][2*mIdx+1];
+        y = (prevA.y + prevB.y) / 2;
+      }
+      pos.push({x, y, m});
+      const g = el('g', {}, svg);
+      const fillClass = m.bye ? 'match-box' : 'match-box';
+      const rect = el('rect', {x, y, width:boxW, height:boxH, rx:6, class:'match-box'}, g);
+      if(m.bye) rect.setAttribute('style','fill:var(--accent-light);stroke:var(--accent);');
+      const t1 = el('text', {x:x+10, y:y+18, class:'match-text'+(m.a==='BYE'?' bye':'')}, g);
+      t1.textContent = m.a;
+      const t2 = el('text', {x:x+10, y:y+36, class:'match-text'+(m.b==='BYE'?' bye':'')}, g);
+      t2.textContent = m.b;
+      el('line', {x1:x+boxW, y1:y+boxH/2, x2:x+boxW/2, y2:y+boxH/2}, g).setAttribute('style','display:none;');
+    });
+    positions.push(pos);
+    const lbl = el('text', {x:x+boxW/2, y:24, class:'round-label', 'text-anchor':'middle'}, svg);
+    lbl.textContent = rIdx===rounds.length-1 ? 'Final' : ('Round '+(rIdx+1));
+  });
+
+  /* connectors */
+  for(let r=0; r<numRounds-1; r++){
+    for(let i=0; i<positions[r].length; i+=2){
+      const a = positions[r][i], b = positions[r][i+1];
+      const nx = a.x + boxW;
+      const midx = nx + roundGap/2;
+      const ny = positions[r+1][i/2].y + boxH/2;
+      el('path', {d:`M${nx} ${a.y+boxH/2} H${midx}`, class:'conn'}, svg);
+      el('path', {d:`M${nx} ${b.y+boxH/2} H${midx}`, class:'conn'}, svg);
+      el('path', {d:`M${midx} ${a.y+boxH/2} V${b.y+boxH/2}`, class:'conn'}, svg);
+      el('path', {d:`M${midx} ${ny} H${nx+boxW+roundGap-boxW}`, class:'conn'}, svg);
+    }
+  }
+  /* champion marker */
+  const last = positions[positions.length-1][0];
+  const cx = last.x + boxW + roundGap/2;
+  el('path', {d:`M${last.x+boxW} ${last.y+boxH/2} H${cx}`, class:'conn'}, svg);
+  const ctext = el('text', {x:cx+6, y:last.y+boxH/2+4, class:'match-text bye'}, svg);
+  ctext.textContent = '🏆 Champion';
+}
+
+/* ---------- Losers bracket flow renderer (conceptual, sequential) ---------- */
+function renderLBFlow(containerId, roundsData){
+  const container = document.getElementById(containerId);
+  roundsData.forEach(rd=>{
+    const col = document.createElement('div');
+    col.className = 'lb-round';
+    const h = document.createElement('h4');
+    h.textContent = rd.label;
+    col.appendChild(h);
+    rd.matches.forEach(txt=>{
+      const box = document.createElement('div');
+      box.className = 'lb-match' + (txt.bye ? ' bye' : '');
+      box.textContent = txt.text;
+      col.appendChild(box);
+    });
+    container.appendChild(col);
+  });
+}
+
+/* ---------- Round robin schedule (circle method) ---------- */
+function generateRoundRobin(n){
+  let teams = Array.from({length:n}, (_,i)=>i+1);
+  const numRounds = teams.length - 1;
+  const half = teams.length / 2;
+  let arr = teams.slice();
+  const rounds = [];
+  for(let r=0;r<numRounds;r++){
+    const matches = [];
+    for(let i=0;i<half;i++){
+      matches.push([arr[i], arr[arr.length-1-i]]);
+    }
+    rounds.push(matches);
+    const fixed = arr[0];
+    const rest = arr.slice(1);
+    rest.unshift(rest.pop());
+    arr = [fixed, ...rest];
+  }
+  return rounds;
+}
+
+function renderSchedule(tableId, rounds, doubleLeg){
+  const table = document.getElementById(tableId);
+  const half = rounds[0].length;
+  let thead = '<tr><th>Round</th>';
+  for(let i=1;i<=half;i++) thead += `<th>Match ${i}</th>`;
+  thead += '</tr>';
+  let rowsHtml = '';
+  rounds.forEach((matches, idx)=>{
+    rowsHtml += `<tr><td class="rlabel">R${idx+1}</td>`;
+    matches.forEach(([a,b])=>{
+      rowsHtml += `<td>Team ${a} vs Team ${b}</td>`;
+    });
+    rowsHtml += '</tr>';
+  });
+  if(doubleLeg){
+    rounds.forEach((matches, idx)=>{
+      rowsHtml += `<tr><td class="rlabel">R${idx+1+rounds.length}</td>`;
+      matches.forEach(([a,b])=>{
+        rowsHtml += `<td>Team ${b} vs Team ${a}</td>`;
+      });
+      rowsHtml += '</tr>';
+    });
+  }
+  table.innerHTML = thead + rowsHtml;
+}
+
+/* ---------- Stepladder ---------- */
+function renderStepladder(containerId){
+  const container = document.getElementById(containerId);
+  const games = [
+    {a:'Seed 6', b:'Seed 5', label:'Game 1'},
+    {a:'Winner of Game 1', b:'Seed 4', label:'Game 2'},
+    {a:'Winner of Game 2', b:'Seed 3', label:'Game 3'},
+    {a:'Winner of Game 3', b:'Seed 2', label:'Game 4'},
+    {a:'Winner of Game 4', b:'Seed 1', label:'Game 5 — Championship'}
+  ];
+  games.forEach((g, i)=>{
+    const row = document.createElement('div');
+    row.className = 'step-row';
+    const box = document.createElement('div');
+    box.className = 'step-box' + (i===games.length-1 ? ' final' : '');
+    box.innerHTML = `<strong>${g.label}</strong><br>${g.a} vs ${g.b}`;
+    row.appendChild(box);
+    container.appendChild(row);
+    if(i < games.length-1){
+      const conn = document.createElement('div');
+      conn.className = 'step-connector';
+      container.appendChild(conn);
+    }
+  });
+}
+
+/* ---------- Build everything ---------- */
+renderTreeBracket('svg-se16', buildSingleElim(16));
+renderTreeBracket('svg-se10', buildSingleElim(10));
+renderTreeBracket('svg-de16-wb', buildSingleElim(16));
+renderTreeBracket('svg-de10-wb', buildSingleElim(10));
+
+renderLBFlow('lb-de16', [
+  {label:'LB Round 1', matches:[
+    {text:'Loser WB-R1-M1 vs Loser WB-R1-M2'},
+    {text:'Loser WB-R1-M3 vs Loser WB-R1-M4'},
+    {text:'Loser WB-R1-M5 vs Loser WB-R1-M6'},
+    {text:'Loser WB-R1-M7 vs Loser WB-R1-M8'}
+  ]},
+  {label:'LB Round 2', matches:[
+    {text:'Winner LB-R1-M1 vs Loser WB-R2-M1'},
+    {text:'Winner LB-R1-M2 vs Loser WB-R2-M2'},
+    {text:'Winner LB-R1-M3 vs Loser WB-R2-M3'},
+    {text:'Winner LB-R1-M4 vs Loser WB-R2-M4'}
+  ]},
+  {label:'LB Round 3', matches:[
+    {text:'Winner LB-R2-M1 vs Winner LB-R2-M2'},
+    {text:'Winner LB-R2-M3 vs Winner LB-R2-M4'}
+  ]},
+  {label:'LB Round 4', matches:[
+    {text:'Winner LB-R3-M1 vs Loser WB-SF-M1'},
+    {text:'Winner LB-R3-M2 vs Loser WB-SF-M2'}
+  ]},
+  {label:'LB Round 5', matches:[
+    {text:'Winner LB-R4-M1 vs Winner LB-R4-M2'}
+  ]},
+  {label:'LB Final', matches:[
+    {text:'Winner LB-R5 vs Loser of WB Final'}
+  ]}
+]);
+
+renderLBFlow('lb-de10', [
+  {label:'LB Round 1', matches:[
+    {text:'Loser WB-R1 real match 1 vs Loser WB-R1 real match 2'}
+  ]},
+  {label:'LB Round 2', matches:[
+    {text:'Loser WB-R2-M1 vs Loser WB-R2-M2'},
+    {text:'Loser WB-R2-M3 vs Loser WB-R2-M4'},
+    {text:'Winner LB-R1 advances (bye)', bye:true}
+  ]},
+  {label:'LB Round 3', matches:[
+    {text:'Winner LB-R2-M1 vs Winner LB-R2-M2'},
+    {text:'LB-R2 bye team advances (bye)', bye:true}
+  ]},
+  {label:'LB Round 4', matches:[
+    {text:'Winner LB-R3-M1 vs Loser WB-SF-M1'},
+    {text:'Winner LB-R3-M2 vs Loser WB-SF-M2'}
+  ]},
+  {label:'LB Round 5', matches:[
+    {text:'Winner LB-R4-M1 vs Winner LB-R4-M2'}
+  ]},
+  {label:'LB Final', matches:[
+    {text:'Winner LB-R5 vs Loser of WB Final'}
+  ]}
+]);
+
+const srr = generateRoundRobin(10);
+renderSchedule('tbl-srr10', srr, false);
+renderSchedule('tbl-drr10', srr, true);
+renderStepladder('step6-ladder');
+</script>
+</body>
+</html>
